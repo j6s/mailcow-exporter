@@ -44,7 +44,7 @@ func collectMetrics(host string, apiKey string) (*prometheus.Registry, error) {
 		collectors, err := provider.Provide(apiClient)
 		if err != nil {
 			return registry, fmt.Errorf(
-				"Error while updating metrics of %T: %#v",
+				"Error while updating metrics of %T:\n%s",
 				provider,
 				err.Error(),
 			)
@@ -54,7 +54,7 @@ func collectMetrics(host string, apiKey string) (*prometheus.Registry, error) {
 			err = registry.Register(collector)
 			if err != nil {
 				return registry, fmt.Errorf(
-					"Error while adding collector of %T: %#v",
+					"Error while adding collector of %T:\n%s",
 					provider,
 					err.Error(),
 				)

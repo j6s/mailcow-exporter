@@ -47,7 +47,8 @@ func (api MailcowApiClient) Get(endpoint string, target interface{}) error {
 	request, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return fmt.Errorf(
-			"Could not prepare API request: %#v",
+			"Could not prepare API request to `%s`: %#v",
+			endpoint,
 			err.Error(),
 		)
 	}
@@ -67,7 +68,8 @@ func (api MailcowApiClient) Get(endpoint string, target interface{}) error {
 	// API Request error handling
 	if err != nil {
 		return fmt.Errorf(
-			"API Request failed: %#v",
+			"API Request to endpoint `%s` failed: \n%s",
+			endpoint,
 			err.Error(),
 		)
 	}
@@ -76,7 +78,8 @@ func (api MailcowApiClient) Get(endpoint string, target interface{}) error {
 	body, err := ioutil.ReadAll(response.Body)
 	if err != nil {
 		return fmt.Errorf(
-			"Could not read API response body: %#v",
+			"Could not read API response body from endpoint `%s`: \n%s",
+			endpoint,
 			err.Error(),
 		)
 	}
@@ -88,8 +91,10 @@ func (api MailcowApiClient) Get(endpoint string, target interface{}) error {
 	err = json.Unmarshal(body, target)
 	if err != nil {
 		return fmt.Errorf(
-			"Could not parse JSON: %#v",
+			"Could not parse JSON response from endpoint `%s`: \n%s \n\nResponse body received: \n%s",
+			endpoint,
 			err.Error(),
+			body,
 		)
 	}
 
