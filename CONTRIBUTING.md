@@ -1,9 +1,17 @@
 # Contribution Guidelines
 
+* [CHANGELOG](./CHANGELOG.md)
+* [LICENSE](./LICENSE)
+* [README](./README.md)
+* [CONTRIBUTING](./CONTRIBUTING.md)
+
 Contributions are always welcome - just open an issue or PR.
 Please be aware that even though it may not seem like it there are always other humans on the other end of a conversation.
 
 **Please treat others with respect and kindness.**
+
+If you have general questions or suggestions for improvement, open an issue or
+[hit me up on twitter](https://twitter.com/thej6s)
 
 ## Adding a new Provider
 
