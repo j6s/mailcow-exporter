@@ -13,8 +13,6 @@ import (
 )
 
 var (
-	apiKey = flag.String("api-key", "", "API Key to use for the requests")
-	host   = flag.String("host", "", "The host of the mailcow instance")
 	listen = flag.String("listen", ":9099", "Host and port to listen on")
 )
 
@@ -60,22 +58,25 @@ func collectMetrics(host string, apiKey string) (*prometheus.Registry, error) {
 	return registry, nil
 }
 
-// Command line argument parsing
-func init() {
-	flag.Parse()
-	if *apiKey == "" || *host == "" {
-		log.Fatal("Both --api-key and --host must be specified")
-	}
-}
-
 func main() {
+	flag.Parse()
+
 	http.HandleFunc("/metrics", func(response http.ResponseWriter, request *http.Request) {
-		registry, err := collectMetrics(*host, *apiKey)
+		host := request.URL.Query().Get("host")
+		apiKey := request.URL.Query().Get("apiKey")
+		if host == "" || apiKey == "" {
+			response.WriteHeader(http.StatusBadRequest)
+			response.Write([]byte("Query parameters `host` & `apiKey` are required"))
+			return
+		}
+
+		registry, err := collectMetrics(host, apiKey)
 		if err != nil {
 			response.WriteHeader(http.StatusInternalServerError)
 			response.Write([]byte(err.Error()))
 			return
 		}
+
 		promhttp.HandlerFor(
 			registry,
 			promhttp.HandlerOpts{},
