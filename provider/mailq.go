@@ -26,22 +26,8 @@ func (mailq Mailq) Provide(api mailcowApi.MailcowApiClient) ([]prometheus.Collec
 		return []prometheus.Collector{}, err
 	}
 
-	queue := make(map[string]map[string]float64)
 	for _, item := range body {
-		if _, ok := queue[item.QueueName]; !ok {
-			queue[item.QueueName] = make(map[string]float64)
-		}
-		if _, ok := queue[item.QueueName][item.Sender]; !ok {
-			queue[item.QueueName][item.Sender] = 0
-		}
-
-		queue[item.QueueName][item.Sender]++
-	}
-
-	for queueName, senders := range queue {
-		for sender, count := range senders {
-			gauge.WithLabelValues(api.Host, queueName, sender).Set(count)
-		}
+		gauge.WithLabelValues(api.Host, item.QueueName, item.Sender).Inc()
 	}
 
 	return []prometheus.Collector{gauge}, nil
