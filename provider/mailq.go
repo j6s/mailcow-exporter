@@ -17,8 +17,9 @@ type queueResponseItem struct {
 
 func (mailq Mailq) Provide(api mailcowApi.MailcowApiClient) ([]prometheus.Collector, error) {
 	gauge := *prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Name: "mailcow_mailq",
-	}, []string{"host", "queue", "sender"})
+		Name:        "mailcow_mailq",
+		ConstLabels: map[string]string{"host": api.Host},
+	}, []string{"queue", "sender"})
 
 	body := make([]queueResponseItem, 0)
 	err := api.Get("api/v1/get/mailq/all", &body)
@@ -27,7 +28,7 @@ func (mailq Mailq) Provide(api mailcowApi.MailcowApiClient) ([]prometheus.Collec
 	}
 
 	for _, item := range body {
-		gauge.WithLabelValues(api.Host, item.QueueName, item.Sender).Inc()
+		gauge.WithLabelValues(item.QueueName, item.Sender).Inc()
 	}
 
 	return []prometheus.Collector{gauge}, nil

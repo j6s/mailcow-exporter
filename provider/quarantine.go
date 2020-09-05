@@ -21,12 +21,14 @@ type quarantineItem struct {
 
 func (quarantine Quarantine) Provide(api mailcowApi.MailcowApiClient) ([]prometheus.Collector, error) {
 	countGauge := *prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Name: "mailcow_quarantine_count",
-	}, []string{"host", "recipient", "is_virus"})
+		Name:        "mailcow_quarantine_count",
+		ConstLabels: map[string]string{"host": api.Host},
+	}, []string{"recipient", "is_virus"})
 	scoreHist := *prometheus.NewHistogramVec(prometheus.HistogramOpts{
-		Name:    "mailcow_quarantine_score",
-		Buckets: []float64{0, 10, 20, 40, 60, 80, 100},
-	}, []string{"host", "recipient"})
+		Name:        "mailcow_quarantine_score",
+		Buckets:     []float64{0, 10, 20, 40, 60, 80, 100},
+		ConstLabels: map[string]string{"host": api.Host},
+	}, []string{"recipient"})
 	ageHist := *prometheus.NewHistogramVec(prometheus.HistogramOpts{
 		Name: "mailcow_quarantine_age",
 		Help: "Age of quarantined items in seconds",
@@ -39,7 +41,8 @@ func (quarantine Quarantine) Provide(api mailcowApi.MailcowApiClient) ([]prometh
 			(14 * 60 * 60 * 24), // 14 days
 			(30 * 60 * 60 * 24), // 30 days
 		},
-	}, []string{"host", "recipient"})
+		ConstLabels: map[string]string{"host": api.Host},
+	}, []string{"recipient"})
 
 	body := make([]quarantineItem, 0)
 	err := api.Get("api/v1/get/quarantine/all", &body)
@@ -64,15 +67,15 @@ func (quarantine Quarantine) Provide(api mailcowApi.MailcowApiClient) ([]prometh
 		}
 
 		age := time.Now().Unix() - q.Created
-		ageHist.WithLabelValues(api.Host, q.Recipient).Observe(float64(age))
-		scoreHist.WithLabelValues(api.Host, q.Recipient).Observe(float64(q.Score))
+		ageHist.WithLabelValues(q.Recipient).Observe(float64(age))
+		scoreHist.WithLabelValues(q.Recipient).Observe(float64(q.Score))
 	}
 
 	for recipient, count := range virus {
-		countGauge.WithLabelValues(api.Host, recipient, "1").Set(float64(count))
+		countGauge.WithLabelValues(recipient, "1").Set(float64(count))
 	}
 	for recipient, count := range notVirus {
-		countGauge.WithLabelValues(api.Host, recipient, "0").Set(float64(count))
+		countGauge.WithLabelValues(recipient, "0").Set(float64(count))
 	}
 
 	return []prometheus.Collector{

@@ -19,11 +19,19 @@ type mailboxItem struct {
 	Messages      int    `json:"messages"`
 }
 
+// All mailbox gauges have the same options anyways.
+func mailboxGauge(name string, host string) prometheus.GaugeVec {
+	return *prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Name:        name,
+		ConstLabels: map[string]string{"host": host},
+	}, []string{"mailbox"})
+}
+
 func (mailbox Mailbox) Provide(api mailcowApi.MailcowApiClient) ([]prometheus.Collector, error) {
-	lastLogin := *prometheus.NewGaugeVec(prometheus.GaugeOpts{Name: "mailcow_mailbox_last_login"}, []string{"host", "mailbox"})
-	quotaAllowed := *prometheus.NewGaugeVec(prometheus.GaugeOpts{Name: "mailcow_mailbox_quota_allowed"}, []string{"host", "mailbox"})
-	quotaUsed := *prometheus.NewGaugeVec(prometheus.GaugeOpts{Name: "mailcow_mailbox_quota_used"}, []string{"host", "mailbox"})
-	messages := *prometheus.NewGaugeVec(prometheus.GaugeOpts{Name: "mailcow_mailbox_messages"}, []string{"host", "mailbox"})
+	lastLogin := mailboxGauge("mailcow_mailbox_last_login", api.Host)
+	quotaAllowed := mailboxGauge("mailcow_mailbox_quota_allowed", api.Host)
+	quotaUsed := mailboxGauge("mailcow_mailbox_quota_used", api.Host)
+	messages := mailboxGauge("mailcow_mailbox_messages", api.Host)
 
 	body := make([]mailboxItem, 0)
 	err := api.Get("api/v1/get/mailbox/all", &body)
@@ -33,10 +41,10 @@ func (mailbox Mailbox) Provide(api mailcowApi.MailcowApiClient) ([]prometheus.Co
 
 	for _, m := range body {
 		lastLoginTimestamp, _ := strconv.ParseFloat(m.LastImapLogin, 64)
-		lastLogin.WithLabelValues(api.Host, m.Username).Set(lastLoginTimestamp)
-		quotaAllowed.WithLabelValues(api.Host, m.Username).Set(float64(m.Quota))
-		quotaUsed.WithLabelValues(api.Host, m.Username).Set(float64(m.QuotaUsed))
-		messages.WithLabelValues(api.Host, m.Username).Set(float64(m.Messages))
+		lastLogin.WithLabelValues(m.Username).Set(lastLoginTimestamp)
+		quotaAllowed.WithLabelValues(m.Username).Set(float64(m.Quota))
+		quotaUsed.WithLabelValues(m.Username).Set(float64(m.QuotaUsed))
+		messages.WithLabelValues(m.Username).Set(float64(m.Messages))
 	}
 
 	return []prometheus.Collector{lastLogin, quotaAllowed, quotaUsed, messages}, nil
