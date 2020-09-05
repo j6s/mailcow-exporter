@@ -20,10 +20,10 @@ type mailboxItem struct {
 }
 
 func (mailbox Mailbox) Provide(api mailcowApi.MailcowApiClient) ([]prometheus.Collector, error) {
-	lastLogin := *prometheus.NewGaugeVec(prometheus.GaugeOpts{Name: "mailcow_mailbox_last_login"}, []string{"mailbox"})
-	quotaAllowed := *prometheus.NewGaugeVec(prometheus.GaugeOpts{Name: "mailcow_mailbox_quota_allowed"}, []string{"mailbox"})
-	quotaUsed := *prometheus.NewGaugeVec(prometheus.GaugeOpts{Name: "mailcow_mailbox_quota_used"}, []string{"mailbox"})
-	messages := *prometheus.NewGaugeVec(prometheus.GaugeOpts{Name: "mailcow_mailbox_messages"}, []string{"mailbox"})
+	lastLogin := *prometheus.NewGaugeVec(prometheus.GaugeOpts{Name: "mailcow_mailbox_last_login"}, []string{"host", "mailbox"})
+	quotaAllowed := *prometheus.NewGaugeVec(prometheus.GaugeOpts{Name: "mailcow_mailbox_quota_allowed"}, []string{"host", "mailbox"})
+	quotaUsed := *prometheus.NewGaugeVec(prometheus.GaugeOpts{Name: "mailcow_mailbox_quota_used"}, []string{"host", "mailbox"})
+	messages := *prometheus.NewGaugeVec(prometheus.GaugeOpts{Name: "mailcow_mailbox_messages"}, []string{"host", "mailbox"})
 
 	body := make([]mailboxItem, 0)
 	err := api.Get("api/v1/get/mailbox/all", &body)
@@ -33,10 +33,10 @@ func (mailbox Mailbox) Provide(api mailcowApi.MailcowApiClient) ([]prometheus.Co
 
 	for _, m := range body {
 		lastLoginTimestamp, _ := strconv.ParseFloat(m.LastImapLogin, 64)
-		lastLogin.WithLabelValues(m.Username).Set(lastLoginTimestamp)
-		quotaAllowed.WithLabelValues(m.Username).Set(float64(m.Quota))
-		quotaUsed.WithLabelValues(m.Username).Set(float64(m.QuotaUsed))
-		messages.WithLabelValues(m.Username).Set(float64(m.Messages))
+		lastLogin.WithLabelValues(api.Host, m.Username).Set(lastLoginTimestamp)
+		quotaAllowed.WithLabelValues(api.Host, m.Username).Set(float64(m.Quota))
+		quotaUsed.WithLabelValues(api.Host, m.Username).Set(float64(m.QuotaUsed))
+		messages.WithLabelValues(api.Host, m.Username).Set(float64(m.Messages))
 	}
 
 	return []prometheus.Collector{lastLogin, quotaAllowed, quotaUsed, messages}, nil
