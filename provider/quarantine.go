@@ -22,10 +22,12 @@ type quarantineItem struct {
 func (quarantine Quarantine) Provide(api mailcowApi.MailcowApiClient) ([]prometheus.Collector, error) {
 	countGauge := *prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Name:        "mailcow_quarantine_count",
+		Help:        "Number of mails currently in quarantine",
 		ConstLabels: map[string]string{"host": api.Host},
 	}, []string{"recipient", "is_virus"})
 	scoreHist := *prometheus.NewHistogramVec(prometheus.HistogramOpts{
 		Name:        "mailcow_quarantine_score",
+		Help:        "Score of quarantined mails according to rspamd",
 		Buckets:     []float64{0, 10, 20, 40, 60, 80, 100},
 		ConstLabels: map[string]string{"host": api.Host},
 	}, []string{"recipient"})

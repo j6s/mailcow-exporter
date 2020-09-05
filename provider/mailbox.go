@@ -20,18 +20,19 @@ type mailboxItem struct {
 }
 
 // All mailbox gauges have the same options anyways.
-func mailboxGauge(name string, host string) prometheus.GaugeVec {
+func mailboxGauge(name string, description string, host string) prometheus.GaugeVec {
 	return *prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Name:        name,
+		Help:        description,
 		ConstLabels: map[string]string{"host": host},
 	}, []string{"mailbox"})
 }
 
 func (mailbox Mailbox) Provide(api mailcowApi.MailcowApiClient) ([]prometheus.Collector, error) {
-	lastLogin := mailboxGauge("mailcow_mailbox_last_login", api.Host)
-	quotaAllowed := mailboxGauge("mailcow_mailbox_quota_allowed", api.Host)
-	quotaUsed := mailboxGauge("mailcow_mailbox_quota_used", api.Host)
-	messages := mailboxGauge("mailcow_mailbox_messages", api.Host)
+	lastLogin := mailboxGauge("mailcow_mailbox_last_login", "Timestamp of the last IMAP login for this mailbox", api.Host)
+	quotaAllowed := mailboxGauge("mailcow_mailbox_quota_allowed", "Quota maximum for the mailbox in bytes", api.Host)
+	quotaUsed := mailboxGauge("mailcow_mailbox_quota_used", "Current syze of the mailbox in bytes", api.Host)
+	messages := mailboxGauge("mailcow_mailbox_messages", "Number of messages in the mailbox", api.Host)
 
 	body := make([]mailboxItem, 0)
 	err := api.Get("api/v1/get/mailbox/all", &body)
