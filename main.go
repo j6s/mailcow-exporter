@@ -24,50 +24,62 @@ var (
 // Be sure to keep a copy of the collectors returned by `GetCollectors`
 // in your provider in order to update that same instance.
 type Provider interface {
-	GetCollectors() []prometheus.Collector
-	Update(mailcowApi.MailcowApiClient)
+	Provide(mailcowApi.MailcowApiClient) ([]prometheus.Collector, error)
 }
 
 // Provider setup. Every provider in this array will be used for gathering metrics.
 var (
 	providers = []Provider{
-		provider.NewMailq(),
-		provider.NewMailbox(),
-		provider.NewQuarantine(),
+		provider.Mailq{},
+		provider.Mailbox{},
+		provider.Quarantine{},
 	}
 )
 
+func collectMetrics(host string, apiKey string) (*prometheus.Registry, error) {
+	apiClient := mailcowApi.MailcowApiClient{
+		Host:   host,
+		ApiKey: apiKey,
+	}
+
+	registry := prometheus.NewRegistry()
+	for _, provider := range providers {
+		collectors, err := provider.Provide(apiClient)
+		if err != nil {
+			return registry, err
+		}
+
+		for _, collector := range collectors {
+			err = registry.Register(collector)
+			if err != nil {
+				return registry, err
+			}
+		}
+	}
+
+	return registry, nil
+}
+
+// Command line argument parsing
 func init() {
-	// Command line argument parsing
 	flag.Parse()
 	if *apiKey == "" || *host == "" {
 		log.Fatal("Both --api-key and --host must be specified")
 	}
-
-	// Registrationg of collectors
-	for _, provider := range providers {
-		for _, collector := range provider.GetCollectors() {
-			prometheus.MustRegister(collector)
-		}
-	}
 }
 
 func main() {
-	apiClient := mailcowApi.MailcowApiClient{
-		Host:   *host,
-		ApiKey: *apiKey,
-	}
-
-	handler := promhttp.HandlerFor(
-		prometheus.DefaultGatherer,
-		promhttp.HandlerOpts{},
-	)
-
 	http.HandleFunc("/metrics", func(response http.ResponseWriter, request *http.Request) {
-		for _, provider := range providers {
-			provider.Update(apiClient)
+		registry, err := collectMetrics(*host, *apiKey)
+		if err != nil {
+			response.WriteHeader(http.StatusInternalServerError)
+			response.Write([]byte(err.Error()))
+			return
 		}
-		handler.ServeHTTP(response, request)
+		promhttp.HandlerFor(
+			registry,
+			promhttp.HandlerOpts{},
+		).ServeHTTP(response, request)
 	})
 
 	log.Printf("Starting to listen on %s", *listen)

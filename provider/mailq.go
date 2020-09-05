@@ -5,33 +5,26 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
-// Mailq Provider. Use `NewMailq` to initialize this struct.
+// Mailq provider.
 // This provider uses the `/api/v1/get/mailq/all` endpoint
 // in order to gather metrics.
-type Mailq struct {
-	Gauge prometheus.GaugeVec
-}
+type Mailq struct{}
 
 type queueResponseItem struct {
 	QueueName string `json:"queue_name"`
 	Sender    string
 }
 
-func NewMailq() Mailq {
-	return Mailq{
-		Gauge: *prometheus.NewGaugeVec(prometheus.GaugeOpts{
-			Name: "mailcow_mailq",
-		}, []string{"queue", "sender"}),
-	}
-}
+func (mailq Mailq) Provide(api mailcowApi.MailcowApiClient) ([]prometheus.Collector, error) {
+	gauge := *prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Name: "mailcow_mailq",
+	}, []string{"queue", "sender"})
 
-func (mailq Mailq) GetCollectors() []prometheus.Collector {
-	return []prometheus.Collector{mailq.Gauge}
-}
-
-func (mailq Mailq) Update(api mailcowApi.MailcowApiClient) {
 	body := make([]queueResponseItem, 0)
-	api.Get("api/v1/get/mailq/all", &body)
+	err := api.Get("api/v1/get/mailq/all", &body)
+	if err != nil {
+		return []prometheus.Collector{}, err
+	}
 
 	queue := make(map[string]map[string]float64)
 	for _, item := range body {
@@ -47,7 +40,9 @@ func (mailq Mailq) Update(api mailcowApi.MailcowApiClient) {
 
 	for queueName, senders := range queue {
 		for sender, count := range senders {
-			mailq.Gauge.WithLabelValues(queueName, sender).Set(count)
+			gauge.WithLabelValues(queueName, sender).Set(count)
 		}
 	}
+
+	return []prometheus.Collector{gauge}, nil
 }

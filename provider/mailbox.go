@@ -7,15 +7,9 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
-// Mailbox Provider. Use `NewMailbox` to initialize this struct.
-// This provider uses the `/api/v1/get/mailbox/all` endpoint
-// in order to gather metrics.
-type Mailbox struct {
-	lastLogin    prometheus.GaugeVec
-	quotaAllowed prometheus.GaugeVec
-	quotaUsed    prometheus.GaugeVec
-	messages     prometheus.GaugeVec
-}
+// Mailbox Provider. This provider uses the `/api/v1/get/mailbox/all`
+// endpoint in order to gather metrics.
+type Mailbox struct{}
 
 type mailboxItem struct {
 	Username      string `json:"username"`
@@ -25,33 +19,25 @@ type mailboxItem struct {
 	Messages      int    `json:"messages"`
 }
 
-func NewMailbox() Mailbox {
-	return Mailbox{
-		lastLogin:    *prometheus.NewGaugeVec(prometheus.GaugeOpts{Name: "mailcow_mailbox_last_login"}, []string{"mailbox"}),
-		quotaAllowed: *prometheus.NewGaugeVec(prometheus.GaugeOpts{Name: "mailcow_mailbox_quota_allowed"}, []string{"mailbox"}),
-		quotaUsed:    *prometheus.NewGaugeVec(prometheus.GaugeOpts{Name: "mailcow_mailbox_quota_used"}, []string{"mailbox"}),
-		messages:     *prometheus.NewGaugeVec(prometheus.GaugeOpts{Name: "mailcow_mailbox_messages"}, []string{"mailbox"}),
-	}
-}
+func (mailbox Mailbox) Provide(api mailcowApi.MailcowApiClient) ([]prometheus.Collector, error) {
+	lastLogin := *prometheus.NewGaugeVec(prometheus.GaugeOpts{Name: "mailcow_mailbox_last_login"}, []string{"mailbox"})
+	quotaAllowed := *prometheus.NewGaugeVec(prometheus.GaugeOpts{Name: "mailcow_mailbox_quota_allowed"}, []string{"mailbox"})
+	quotaUsed := *prometheus.NewGaugeVec(prometheus.GaugeOpts{Name: "mailcow_mailbox_quota_used"}, []string{"mailbox"})
+	messages := *prometheus.NewGaugeVec(prometheus.GaugeOpts{Name: "mailcow_mailbox_messages"}, []string{"mailbox"})
 
-func (mailbox Mailbox) GetCollectors() []prometheus.Collector {
-	return []prometheus.Collector{
-		mailbox.lastLogin,
-		mailbox.quotaAllowed,
-		mailbox.quotaUsed,
-		mailbox.messages,
-	}
-}
-
-func (mailbox Mailbox) Update(api mailcowApi.MailcowApiClient) {
 	body := make([]mailboxItem, 0)
-	api.Get("api/v1/get/mailbox/all", &body)
+	err := api.Get("api/v1/get/mailbox/all", &body)
+	if err != nil {
+		return []prometheus.Collector{}, err
+	}
 
 	for _, m := range body {
-		lastLogin, _ := strconv.ParseFloat(m.LastImapLogin, 64)
-		mailbox.lastLogin.WithLabelValues(m.Username).Set(lastLogin)
-		mailbox.quotaAllowed.WithLabelValues(m.Username).Set(float64(m.Quota))
-		mailbox.quotaUsed.WithLabelValues(m.Username).Set(float64(m.QuotaUsed))
-		mailbox.messages.WithLabelValues(m.Username).Set(float64(m.Messages))
+		lastLoginTimestamp, _ := strconv.ParseFloat(m.LastImapLogin, 64)
+		lastLogin.WithLabelValues(m.Username).Set(lastLoginTimestamp)
+		quotaAllowed.WithLabelValues(m.Username).Set(float64(m.Quota))
+		quotaUsed.WithLabelValues(m.Username).Set(float64(m.QuotaUsed))
+		messages.WithLabelValues(m.Username).Set(float64(m.Messages))
 	}
+
+	return []prometheus.Collector{lastLogin, quotaAllowed, quotaUsed, messages}, nil
 }

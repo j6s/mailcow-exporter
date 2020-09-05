@@ -10,11 +10,7 @@ import (
 // Quarantine Provider. Use `NewQuarantine` to initialize this struct.
 // This provider uses the `/api/v1/get/quarantine/all` endpoint
 // in order to gather metrics about quarantined mails.
-type Quarantine struct {
-	count prometheus.GaugeVec
-	score prometheus.HistogramVec
-	age   prometheus.HistogramVec
-}
+type Quarantine struct{}
 
 type quarantineItem struct {
 	VirusFlag int     `json:"virus_flag"`
@@ -23,43 +19,33 @@ type quarantineItem struct {
 	Created   int64   `json:"created"`
 }
 
-func NewQuarantine() Quarantine {
-	return Quarantine{
-		count: *prometheus.NewGaugeVec(prometheus.GaugeOpts{Name: "mailcow_quarantine_count"}, []string{"recipient", "is_virus"}),
-		score: *prometheus.NewHistogramVec(prometheus.HistogramOpts{
-			Name:    "mailcow_quarantine_score",
-			Buckets: []float64{0, 10, 20, 40, 60, 80, 100},
-		}, []string{"recipient"}),
-		age: *prometheus.NewHistogramVec(prometheus.HistogramOpts{
-			Name: "mailcow_quarantine_age",
-			Help: "Age of quarantined items in seconds",
-			Buckets: []float64{
-				(60 * 60 * 3),       // 3 hours
-				(60 * 60 * 12),      // 12 hours
-				(60 * 60 * 24),      // 1 day
-				(3 * 60 * 60 * 24),  // 3 days
-				(7 * 60 * 60 * 24),  // 7 days
-				(14 * 60 * 60 * 24), // 14 days
-				(30 * 60 * 60 * 24), // 30 days
-			},
-		}, []string{"recipient"}),
-	}
-}
-
-func (quarantine Quarantine) GetCollectors() []prometheus.Collector {
-	return []prometheus.Collector{
-		quarantine.count,
-		quarantine.score,
-		quarantine.age,
-	}
-}
-
-func (quarantine Quarantine) Update(api mailcowApi.MailcowApiClient) {
-	quarantine.age.Reset()
-	quarantine.score.Reset()
+func (quarantine Quarantine) Provide(api mailcowApi.MailcowApiClient) ([]prometheus.Collector, error) {
+	countGauge := *prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Name: "mailcow_quarantine_count",
+	}, []string{"recipient", "is_virus"})
+	scoreHist := *prometheus.NewHistogramVec(prometheus.HistogramOpts{
+		Name:    "mailcow_quarantine_score",
+		Buckets: []float64{0, 10, 20, 40, 60, 80, 100},
+	}, []string{"recipient"})
+	ageHist := *prometheus.NewHistogramVec(prometheus.HistogramOpts{
+		Name: "mailcow_quarantine_age",
+		Help: "Age of quarantined items in seconds",
+		Buckets: []float64{
+			(60 * 60 * 3),       // 3 hours
+			(60 * 60 * 12),      // 12 hours
+			(60 * 60 * 24),      // 1 day
+			(3 * 60 * 60 * 24),  // 3 days
+			(7 * 60 * 60 * 24),  // 7 days
+			(14 * 60 * 60 * 24), // 14 days
+			(30 * 60 * 60 * 24), // 30 days
+		},
+	}, []string{"recipient"})
 
 	body := make([]quarantineItem, 0)
-	api.Get("api/v1/get/quarantine/all", &body)
+	err := api.Get("api/v1/get/quarantine/all", &body)
+	if err != nil {
+		return []prometheus.Collector{}, err
+	}
 
 	virus := make(map[string]int)
 	notVirus := make(map[string]int)
@@ -78,14 +64,20 @@ func (quarantine Quarantine) Update(api mailcowApi.MailcowApiClient) {
 		}
 
 		age := time.Now().Unix() - q.Created
-		quarantine.age.WithLabelValues(q.Recipient).Observe(float64(age))
-		quarantine.score.WithLabelValues(q.Recipient).Observe(float64(q.Score))
+		ageHist.WithLabelValues(q.Recipient).Observe(float64(age))
+		scoreHist.WithLabelValues(q.Recipient).Observe(float64(q.Score))
 	}
 
 	for recipient, count := range virus {
-		quarantine.count.WithLabelValues(recipient, "1").Set(float64(count))
+		countGauge.WithLabelValues(recipient, "1").Set(float64(count))
 	}
 	for recipient, count := range notVirus {
-		quarantine.count.WithLabelValues(recipient, "0").Set(float64(count))
+		countGauge.WithLabelValues(recipient, "0").Set(float64(count))
 	}
+
+	return []prometheus.Collector{
+		countGauge,
+		scoreHist,
+		ageHist,
+	}, nil
 }
