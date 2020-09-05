@@ -125,4 +125,48 @@ mailcow_api_response_size{host="mail.example.com",endpoint="api/v1/get/quarantin
 mailcow_api_response_time{host="mail.example.com",endpoint="api/v1/get/mailbox/all",statusCode="200"} 81
 mailcow_api_response_time{host="mail.example.com",endpoint="api/v1/get/mailq/all",statusCode="200"} 615
 mailcow_api_response_time{host="mail.example.com",endpoint="api/v1/get/quarantine/all",statusCode="200"} 46
+
+# HELP mailcow_container_running 1 if the container is running, 0 if not
+# TYPE mailcow_container_running gauge
+mailcow_container_running{container="acme-mailcow",host="mail.example.com",image="mailcow/acme:1.74"} 1
+mailcow_container_running{container="clamd-mailcow",host="mail.example.com",image="mailcow/clamd:1.36"} 1
+mailcow_container_running{container="dockerapi-mailcow",host="mail.example.com",image="mailcow/dockerapi:1.37"} 1
+mailcow_container_running{container="dovecot-mailcow",host="mail.example.com",image="mailcow/dovecot:1.130"} 1
+mailcow_container_running{container="ipv6nat-mailcow",host="mail.example.com",image="robbertkl/ipv6nat"} 1
+mailcow_container_running{container="memcached-mailcow",host="mail.example.com",image="memcached:alpine"} 1
+mailcow_container_running{container="mysql-mailcow",host="mail.example.com",image="mariadb:10.4"} 1
+mailcow_container_running{container="netfilter-mailcow",host="mail.example.com",image="mailcow/netfilter:1.38"} 1
+mailcow_container_running{container="nginx-mailcow",host="mail.example.com",image="nginx:mainline-alpine"} 1
+mailcow_container_running{container="olefy-mailcow",host="mail.example.com",image="mailcow/olefy:1.3"} 1
+mailcow_container_running{container="php-fpm-mailcow",host="mail.example.com",image="mailcow/phpfpm:1.69"} 1
+mailcow_container_running{container="postfix-exporter",host="mail.example.com",image="unikum/postfix_exporter"} 1
+mailcow_container_running{container="postfix-mailcow",host="mail.example.com",image="mailcow/postfix:1.51"} 1
+mailcow_container_running{container="redis-mailcow",host="mail.example.com",image="redis:5-alpine"} 1
+mailcow_container_running{container="rspamd-mailcow",host="mail.example.com",image="mailcow/rspamd:1.68"} 1
+mailcow_container_running{container="sogo-mailcow",host="mail.example.com",image="mailcow/sogo:1.83"} 1
+mailcow_container_running{container="solr-mailcow",host="mail.example.com",image="mailcow/solr:1.7"} 1
+mailcow_container_running{container="unbound-mailcow",host="mail.example.com",image="mailcow/unbound:1.12"} 1
+mailcow_container_running{container="watchdog-mailcow",host="mail.example.com",image="mailcow/watchdog:1.82"} 1
+
+# HELP mailcow_container_start Unix timestamp of the container start
+# TYPE mailcow_container_start gauge
+mailcow_container_start{container="acme-mailcow",host="mail.example.com",image="mailcow/acme:1.74"} 1.599247354e+09
+mailcow_container_start{container="clamd-mailcow",host="mail.example.com",image="mailcow/clamd:1.36"} 1.599247354e+09
+mailcow_container_start{container="dockerapi-mailcow",host="mail.example.com",image="mailcow/dockerapi:1.37"} 1.599247354e+09
+mailcow_container_start{container="dovecot-mailcow",host="mail.example.com",image="mailcow/dovecot:1.130"} 1.599247354e+09
+mailcow_container_start{container="ipv6nat-mailcow",host="mail.example.com",image="robbertkl/ipv6nat"} 1.599247354e+09
+mailcow_container_start{container="memcached-mailcow",host="mail.example.com",image="memcached:alpine"} 1.599247354e+09
+mailcow_container_start{container="mysql-mailcow",host="mail.example.com",image="mariadb:10.4"} 1.599247354e+09
+mailcow_container_start{container="netfilter-mailcow",host="mail.example.com",image="mailcow/netfilter:1.38"} 1.599247354e+09
+mailcow_container_start{container="nginx-mailcow",host="mail.example.com",image="nginx:mainline-alpine"} 1.599247354e+09
+mailcow_container_start{container="olefy-mailcow",host="mail.example.com",image="mailcow/olefy:1.3"} 1.599247354e+09
+mailcow_container_start{container="php-fpm-mailcow",host="mail.example.com",image="mailcow/phpfpm:1.69"} 1.599247354e+09
+mailcow_container_start{container="postfix-exporter",host="mail.example.com",image="unikum/postfix_exporter"} 1.599247354e+09
+mailcow_container_start{container="postfix-mailcow",host="mail.example.com",image="mailcow/postfix:1.51"} 1.599247354e+09
+mailcow_container_start{container="redis-mailcow",host="mail.example.com",image="redis:5-alpine"} 1.599247354e+09
+mailcow_container_start{container="rspamd-mailcow",host="mail.example.com",image="mailcow/rspamd:1.68"} 1.599247354e+09
+mailcow_container_start{container="sogo-mailcow",host="mail.example.com",image="mailcow/sogo:1.83"} 1.599247354e+09
+mailcow_container_start{container="solr-mailcow",host="mail.example.com",image="mailcow/solr:1.7"} 1.599247354e+09
+mailcow_container_start{container="unbound-mailcow",host="mail.example.com",image="mailcow/unbound:1.12"} 1.599247354e+09
+mailcow_container_start{container="watchdog-mailcow",host="mail.example.com",image="mailcow/watchdog:1.82"} 1.599247354e+09
 ```

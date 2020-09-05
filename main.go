@@ -31,6 +31,7 @@ var (
 		provider.Mailq{},
 		provider.Mailbox{},
 		provider.Quarantine{},
+		provider.Container{},
 	}
 )
 
