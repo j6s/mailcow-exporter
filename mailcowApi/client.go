@@ -88,6 +88,15 @@ func (api MailcowApiClient) Get(endpoint string, target interface{}) error {
 		WithLabelValues(endpoint, statusCodeString).
 		Set(float64(len(body)))
 
+	if response.StatusCode != 200 {
+		return fmt.Errorf(
+			"Received %d response from endpoint `%s`: \n\nResponse body received: \n%s",
+			response.StatusCode,
+			endpoint,
+			body,
+		)
+	}
+
 	err = json.Unmarshal(body, target)
 	if err != nil {
 		return fmt.Errorf(
