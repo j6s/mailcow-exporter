@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"log"
 	"net/http"
 
@@ -42,13 +43,21 @@ func collectMetrics(host string, apiKey string) (*prometheus.Registry, error) {
 	for _, provider := range providers {
 		collectors, err := provider.Provide(apiClient)
 		if err != nil {
-			return registry, err
+			return registry, fmt.Errorf(
+				"Error while updating metrics of %T: %#v",
+				provider,
+				err.Error(),
+			)
 		}
 
 		for _, collector := range collectors {
 			err = registry.Register(collector)
 			if err != nil {
-				return registry, err
+				return registry, fmt.Errorf(
+					"Error while adding collector of %T: %#v",
+					provider,
+					err.Error(),
+				)
 			}
 		}
 	}
@@ -74,6 +83,7 @@ func main() {
 
 		registry, err := collectMetrics(host, apiKey)
 		if err != nil {
+			log.Printf("%#v", err)
 			response.WriteHeader(http.StatusInternalServerError)
 			response.Write([]byte(err.Error()))
 			return

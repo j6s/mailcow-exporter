@@ -46,7 +46,10 @@ func (api MailcowApiClient) Get(endpoint string, target interface{}) error {
 
 	request, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		return err
+		return fmt.Errorf(
+			"Could not prepare API request: %#v",
+			err.Error(),
+		)
 	}
 
 	request.Header.Add("X-Api-Key", api.ApiKey)
@@ -63,20 +66,34 @@ func (api MailcowApiClient) Get(endpoint string, target interface{}) error {
 
 	// API Request error handling
 	if err != nil {
-		return err
+		return fmt.Errorf(
+			"API Request failed: %#v",
+			err.Error(),
+		)
 	}
 
 	defer response.Body.Close()
 	body, err := ioutil.ReadAll(response.Body)
 	if err != nil {
-		return err
+		return fmt.Errorf(
+			"Could not read API response body: %#v",
+			err.Error(),
+		)
 	}
 
 	api.ResponseSize.
 		WithLabelValues(endpoint, statusCodeString).
 		Set(float64(len(body)))
 
-	return json.Unmarshal(body, target)
+	err = json.Unmarshal(body, target)
+	if err != nil {
+		return fmt.Errorf(
+			"Could not parse JSON: %#v",
+			err.Error(),
+		)
+	}
+
+	return nil
 }
 
 // Provides (meta) metrics about API endpoints
