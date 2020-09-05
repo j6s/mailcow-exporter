@@ -15,40 +15,46 @@ var (
 	listen = flag.String("listen", ":9099", "Host and port to listen on")
 )
 
-type QueueResponseItem struct {
-	QueueName string `json:"queue_name"`
-	Sender    string
-}
-
+// A Provider is the common abstraction over collection of metrics in this
+// exporter. It can provide one or more prometheus collectors (e.g. gauges,
+// histograms, ...) that are updated every time the `Update` method is called.
+// Be sure to keep a copy of the collectors returned by `GetCollectors`
+// in your provider in order to update that same instance.
 type Provider interface {
 	GetCollectors() []prometheus.Collector
 	Update()
 }
 
-func main() {
+// Provider setup. Every provider in this array will be used for gathering metrics.
+var (
+	providers = []Provider{
+		NewMailq(),
+		NewMailbox(),
+		NewQuarantine(),
+	}
+)
+
+func init() {
+	// Command line argument parsing
 	flag.Parse()
 	if *apiKey == "" || *host == "" {
 		log.Fatal("Both --api-key and --host must be specified")
 	}
 
-	providers := []Provider{
-		NewMailq(),
-		NewMailbox(),
-		NewQuarantine(),
-	}
-
+	// Registrationg of collectors
 	for _, provider := range providers {
 		for _, collector := range provider.GetCollectors() {
 			prometheus.MustRegister(collector)
 		}
 	}
+}
 
+func main() {
 	handler := promhttp.HandlerFor(
 		prometheus.DefaultGatherer,
 		promhttp.HandlerOpts{},
 	)
 
-	// Expose the registered metrics via HTTP.
 	http.HandleFunc("/metrics", func(response http.ResponseWriter, request *http.Request) {
 		for _, provider := range providers {
 			provider.Update()

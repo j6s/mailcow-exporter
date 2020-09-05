@@ -6,17 +6,20 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
-type QuarantineItem struct {
-	VirusFlag int     `json:"virus_flag"`
-	Score     float64 `json:"score"`
-	Recipient string  `json:"rcpt"`
-	Created   int64   `json:"created"`
-}
-
+// Quarantine Provider. Use `NewQuarantine` to initialize this struct.
+// This provider uses the `/api/v1/get/quarantine/all` endpoint
+// in order to gather metrics about quarantined mails.
 type Quarantine struct {
 	count prometheus.GaugeVec
 	score prometheus.HistogramVec
 	age   prometheus.HistogramVec
+}
+
+type quarantineItem struct {
+	VirusFlag int     `json:"virus_flag"`
+	Score     float64 `json:"score"`
+	Recipient string  `json:"rcpt"`
+	Created   int64   `json:"created"`
 }
 
 func NewQuarantine() Quarantine {
@@ -54,7 +57,7 @@ func (quarantine Quarantine) Update() {
 	quarantine.age.Reset()
 	quarantine.score.Reset()
 
-	body := make([]QuarantineItem, 0)
+	body := make([]quarantineItem, 0)
 	apiRequest("api/v1/get/quarantine/all", &body)
 
 	virus := make(map[string]int)

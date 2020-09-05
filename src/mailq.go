@@ -2,8 +2,16 @@ package main
 
 import "github.com/prometheus/client_golang/prometheus"
 
+// Mailq Provider. Use `NewMailq` to initialize this struct.
+// This provider uses the `/api/v1/get/mailq/all` endpoint
+// in order to gather metrics.
 type Mailq struct {
 	Gauge prometheus.GaugeVec
+}
+
+type queueResponseItem struct {
+	QueueName string `json:"queue_name"`
+	Sender    string
 }
 
 func NewMailq() Mailq {
@@ -19,7 +27,7 @@ func (mailq Mailq) GetCollectors() []prometheus.Collector {
 }
 
 func (mailq Mailq) Update() {
-	body := make([]QueueResponseItem, 0)
+	body := make([]queueResponseItem, 0)
 	apiRequest("api/v1/get/mailq/all", &body)
 
 	queue := make(map[string]map[string]float64)

@@ -8,6 +8,23 @@ import (
 	"net/http"
 )
 
+// Common abstraction over api requests to mailcow.
+// Given an endpoint, this method will do the HTTP request
+// with the correct authentication and unserialize the JSON
+// response into a given target reference.
+//
+// NOTE: This method relies on the global *host and *apiKey
+//       existing variables
+//
+// TODO: Move into struct that is initialized with host and apiKey to
+//       remove the reliance on global variables.
+//
+// FIXME: This method kills the program when an error is encountered.
+//        there should be proper error handling here.
+//
+// Example:
+// body := make([]apiItem, 0)
+// apiRequest("api/v1/get/foo/all", &body)
 func apiRequest(endpoint string, target interface{}) {
 	url := fmt.Sprintf("https://%s/%s", *host, endpoint)
 	log.Print(url)
