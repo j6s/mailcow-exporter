@@ -36,22 +36,33 @@ scrape_configs:
 ## Example metrics
 
 ```
+# HELP mailcow_mailbox_last_login Timestamp of the last IMAP login for this mailbox
+# TYPE mailcow_mailbox_last_login gauge
 mailcow_mailbox_last_login{host="mail.example.com",mailbox="foo@bar.com"} 1.599255303e+09
 mailcow_mailbox_last_login{host="mail.example.com",mailbox="test@bar.com"} 1.599247706e+09
 
+# HELP mailcow_mailbox_messages Number of messages in the mailbox
+# TYPE mailcow_mailbox_messages gauge
 mailcow_mailbox_messages{host="mail.example.com",mailbox="foo@bar.com"} 23476
 mailcow_mailbox_messages{host="mail.example.com",mailbox="test@bar.com"} 1891
 
+# HELP mailcow_mailbox_quota_allowed Quota maximum for the mailbox in bytes
+# TYPE mailcow_mailbox_quota_allowed gauge
 mailcow_mailbox_quota_allowed{host="mail.example.com",mailbox="foo@bar.com"} 3.221225472e+09
 mailcow_mailbox_quota_allowed{host="mail.example.com",mailbox="test@bar.com"} 3.221225472e+09
 
+# HELP mailcow_mailbox_quota_used Current syze of the mailbox in bytes
+# TYPE mailcow_mailbox_quota_used gauge
 mailcow_mailbox_quota_used{host="mail.example.com",mailbox="foo@bar.com"} 1.919023167e+09
 mailcow_mailbox_quota_used{host="mail.example.com",mailbox="test@bar.com"} 1.844312552e+09
 
+# HELP mailcow_mailq Length of the queue
+# TYPE mailcow_mailq gauge
 mailcow_mailq{host="mail.example.com",queue="deferred",sender="foo@bar.com"} 2
 mailcow_mailq{host="mail.example.com",queue="deferred",sender="test@bar.com"} 1
 
 # HELP mailcow_quarantine_age Age of quarantined items in seconds
+# TYPE mailcow_quarantine_age histogram
 mailcow_quarantine_age_bucket{host="mail.example.com",recipient="foo@bar.com",le="10800"} 0
 mailcow_quarantine_age_bucket{host="mail.example.com",recipient="foo@bar.com",le="43200"} 0
 mailcow_quarantine_age_bucket{host="mail.example.com",recipient="foo@bar.com",le="86400"} 0
@@ -73,6 +84,8 @@ mailcow_quarantine_age_bucket{host="mail.example.com",recipient="test@bar.com",l
 mailcow_quarantine_age_sum{host="mail.example.com",recipient="test@bar.com"} 2.7138547e+07
 mailcow_quarantine_age_count{host="mail.example.com",recipient="test@bar.com"} 2
 
+# HELP mailcow_quarantine_score Score of quarantined mails according to rspamd
+# TYPE mailcow_quarantine_score histogram
 mailcow_quarantine_score_bucket{host="mail.example.com",recipient="foo@bar.com",le="0"} 0
 mailcow_quarantine_score_bucket{host="mail.example.com",recipient="foo@bar.com",le="10"} 0
 mailcow_quarantine_score_bucket{host="mail.example.com",recipient="foo@bar.com",le="20"} 41
@@ -94,8 +107,22 @@ mailcow_quarantine_score_bucket{host="mail.example.com",recipient="test@bar.com"
 mailcow_quarantine_score_sum{host="mail.example.com",recipient="test@bar.com"} 3988.03
 mailcow_quarantine_score_count{host="mail.example.com",recipient="test@bar.com"} 2
 
+# HELP mailcow_quarantine_count Number of mails currently in quarantine
+# TYPE mailcow_quarantine_count gauge
 mailcow_quarantine_count{host="mail.example.com",is_virus="0",recipient="foo@bar.com"} 147
 mailcow_quarantine_count{host="mail.example.com",is_virus="0",recipient="test@bar.com"} 2
 mailcow_quarantine_count{host="mail.example.com",is_virus="1",recipient="foo@bar.com"} 0
 mailcow_quarantine_count{host="mail.example.com",is_virus="1",recipient="test@bar.com"} 0
+
+# HELP mailcow_api_response_size Size of API response in bytes
+# TYPE mailcow_api_response_size gauge
+mailcow_api_response_size{host="mail.example.com",endpoint="api/v1/get/mailbox/all",statusCode="200"} 4395
+mailcow_api_response_size{host="mail.example.com",endpoint="api/v1/get/mailq/all",statusCode="200"} 1798
+mailcow_api_response_size{host="mail.example.com",endpoint="api/v1/get/quarantine/all",statusCode="200"} 47898
+
+# HELP mailcow_api_response_time Response time of the API in milliseconds (1/1000s of a second)
+# TYPE mailcow_api_response_time gauge
+mailcow_api_response_time{host="mail.example.com",endpoint="api/v1/get/mailbox/all",statusCode="200"} 81
+mailcow_api_response_time{host="mail.example.com",endpoint="api/v1/get/mailq/all",statusCode="200"} 615
+mailcow_api_response_time{host="mail.example.com",endpoint="api/v1/get/quarantine/all",statusCode="200"} 46
 ```

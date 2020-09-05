@@ -35,10 +35,7 @@ var (
 )
 
 func collectMetrics(host string, apiKey string) (*prometheus.Registry, error) {
-	apiClient := mailcowApi.MailcowApiClient{
-		Host:   host,
-		ApiKey: apiKey,
-	}
+	apiClient := mailcowApi.NewMailcowApiClient(host, apiKey)
 
 	registry := prometheus.NewRegistry()
 	for _, provider := range providers {
@@ -53,6 +50,10 @@ func collectMetrics(host string, apiKey string) (*prometheus.Registry, error) {
 				return registry, err
 			}
 		}
+	}
+
+	for _, collector := range apiClient.Provide() {
+		registry.Register(collector)
 	}
 
 	return registry, nil
