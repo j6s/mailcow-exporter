@@ -5,6 +5,9 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/j6s/mailcow-exporter/mailcowApi"
+	"github.com/j6s/mailcow-exporter/provider"
+
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
@@ -22,15 +25,15 @@ var (
 // in your provider in order to update that same instance.
 type Provider interface {
 	GetCollectors() []prometheus.Collector
-	Update()
+	Update(mailcowApi.MailcowApiClient)
 }
 
 // Provider setup. Every provider in this array will be used for gathering metrics.
 var (
 	providers = []Provider{
-		NewMailq(),
-		NewMailbox(),
-		NewQuarantine(),
+		provider.NewMailq(),
+		provider.NewMailbox(),
+		provider.NewQuarantine(),
 	}
 )
 
@@ -50,6 +53,11 @@ func init() {
 }
 
 func main() {
+	apiClient := mailcowApi.MailcowApiClient{
+		Host:   *host,
+		ApiKey: *apiKey,
+	}
+
 	handler := promhttp.HandlerFor(
 		prometheus.DefaultGatherer,
 		promhttp.HandlerOpts{},
@@ -57,7 +65,7 @@ func main() {
 
 	http.HandleFunc("/metrics", func(response http.ResponseWriter, request *http.Request) {
 		for _, provider := range providers {
-			provider.Update()
+			provider.Update(apiClient)
 		}
 		handler.ServeHTTP(response, request)
 	})

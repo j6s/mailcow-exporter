@@ -1,6 +1,9 @@
-package main
+package provider
 
-import "github.com/prometheus/client_golang/prometheus"
+import (
+	"github.com/j6s/mailcow-exporter/mailcowApi"
+	"github.com/prometheus/client_golang/prometheus"
+)
 
 // Mailq Provider. Use `NewMailq` to initialize this struct.
 // This provider uses the `/api/v1/get/mailq/all` endpoint
@@ -26,9 +29,9 @@ func (mailq Mailq) GetCollectors() []prometheus.Collector {
 	return []prometheus.Collector{mailq.Gauge}
 }
 
-func (mailq Mailq) Update() {
+func (mailq Mailq) Update(api mailcowApi.MailcowApiClient) {
 	body := make([]queueResponseItem, 0)
-	apiRequest("api/v1/get/mailq/all", &body)
+	api.Get("api/v1/get/mailq/all", &body)
 
 	queue := make(map[string]map[string]float64)
 	for _, item := range body {

@@ -1,8 +1,9 @@
-package main
+package provider
 
 import (
 	"strconv"
 
+	"github.com/j6s/mailcow-exporter/mailcowApi"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
@@ -42,9 +43,9 @@ func (mailbox Mailbox) GetCollectors() []prometheus.Collector {
 	}
 }
 
-func (mailbox Mailbox) Update() {
+func (mailbox Mailbox) Update(api mailcowApi.MailcowApiClient) {
 	body := make([]mailboxItem, 0)
-	apiRequest("api/v1/get/mailbox/all", &body)
+	api.Get("api/v1/get/mailbox/all", &body)
 
 	for _, m := range body {
 		lastLogin, _ := strconv.ParseFloat(m.LastImapLogin, 64)

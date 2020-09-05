@@ -1,8 +1,9 @@
-package main
+package provider
 
 import (
 	"time"
 
+	"github.com/j6s/mailcow-exporter/mailcowApi"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
@@ -53,12 +54,12 @@ func (quarantine Quarantine) GetCollectors() []prometheus.Collector {
 	}
 }
 
-func (quarantine Quarantine) Update() {
+func (quarantine Quarantine) Update(api mailcowApi.MailcowApiClient) {
 	quarantine.age.Reset()
 	quarantine.score.Reset()
 
 	body := make([]quarantineItem, 0)
-	apiRequest("api/v1/get/quarantine/all", &body)
+	api.Get("api/v1/get/quarantine/all", &body)
 
 	virus := make(map[string]int)
 	notVirus := make(map[string]int)
