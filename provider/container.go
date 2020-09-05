@@ -40,7 +40,7 @@ func (container Container) Provide(api mailcowApi.MailcowApiClient) ([]prometheu
 			isRunning = 1.0
 		}
 
-		t, err := time.Parse(time.RFC3339Nano, "2020-09-04T19:22:34.379298856Z")
+		t, err := time.Parse(time.RFC3339Nano, item.StartedAt)
 		if err != nil {
 			return []prometheus.Collector{}, err
 		}
