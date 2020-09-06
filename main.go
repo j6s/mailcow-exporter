@@ -36,14 +36,23 @@ var (
 	}
 )
 
-func collectMetrics(host string, apiKey string) (*prometheus.Registry, error) {
+func collectMetrics(host string, apiKey string) *prometheus.Registry {
 	apiClient := mailcowApi.NewMailcowApiClient(host, apiKey)
 
+	success := prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Name:        "mailcow_exporter_success",
+		ConstLabels: map[string]string{"host": host},
+	}, []string{"provider"})
+
 	registry := prometheus.NewRegistry()
+	registry.Register(success)
+
 	for _, provider := range providers {
+		providerSuccess := true
 		collectors, err := provider.Provide(apiClient)
 		if err != nil {
-			return registry, fmt.Errorf(
+			providerSuccess = false
+			log.Printf(
 				"Error while updating metrics of %T:\n%s",
 				provider,
 				err.Error(),
@@ -53,12 +62,19 @@ func collectMetrics(host string, apiKey string) (*prometheus.Registry, error) {
 		for _, collector := range collectors {
 			err = registry.Register(collector)
 			if err != nil {
-				return registry, fmt.Errorf(
-					"Error while adding collector of %T:\n%s",
+				providerSuccess = false
+				log.Printf(
+					"Error while updating metrics of %T:\n%s",
 					provider,
 					err.Error(),
 				)
 			}
+		}
+
+		if providerSuccess {
+			success.WithLabelValues(fmt.Sprintf("%T", provider)).Set(1.0)
+		} else {
+			success.WithLabelValues(fmt.Sprintf("%T", provider)).Set(0.0)
 		}
 	}
 
@@ -66,7 +82,7 @@ func collectMetrics(host string, apiKey string) (*prometheus.Registry, error) {
 		registry.Register(collector)
 	}
 
-	return registry, nil
+	return registry
 }
 
 func main() {
@@ -81,13 +97,7 @@ func main() {
 			return
 		}
 
-		registry, err := collectMetrics(host, apiKey)
-		if err != nil {
-			log.Printf("%#v", err)
-			response.WriteHeader(http.StatusInternalServerError)
-			response.Write([]byte(err.Error()))
-			return
-		}
+		registry := collectMetrics(host, apiKey)
 
 		promhttp.HandlerFor(
 			registry,

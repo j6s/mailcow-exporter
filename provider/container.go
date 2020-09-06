@@ -27,11 +27,12 @@ func (container Container) Provide(api mailcowApi.MailcowApiClient) ([]prometheu
 		Help:        "1 if the container is running, 0 if not",
 		ConstLabels: map[string]string{"host": api.Host},
 	}, []string{"container", "image"})
+	collectors := []prometheus.Collector{running, startTime}
 
 	body := make(map[string]containerItem)
 	err := api.Get("api/v1/get/status/containers", &body)
 	if err != nil {
-		return []prometheus.Collector{}, err
+		return collectors, err
 	}
 
 	for _, item := range body {
@@ -49,5 +50,5 @@ func (container Container) Provide(api mailcowApi.MailcowApiClient) ([]prometheu
 		startTime.WithLabelValues(item.Container, item.Image).Set(float64(t.Unix()))
 	}
 
-	return []prometheus.Collector{running, startTime}, nil
+	return collectors, nil
 }

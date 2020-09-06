@@ -46,10 +46,16 @@ func (quarantine Quarantine) Provide(api mailcowApi.MailcowApiClient) ([]prometh
 		ConstLabels: map[string]string{"host": api.Host},
 	}, []string{"recipient"})
 
+	collectors := []prometheus.Collector{
+		countGauge,
+		scoreHist,
+		ageHist,
+	}
+
 	body := make([]quarantineItem, 0)
 	err := api.Get("api/v1/get/quarantine/all", &body)
 	if err != nil {
-		return []prometheus.Collector{}, err
+		return collectors, err
 	}
 
 	virus := make(map[string]int)
@@ -80,9 +86,5 @@ func (quarantine Quarantine) Provide(api mailcowApi.MailcowApiClient) ([]prometh
 		countGauge.WithLabelValues(recipient, "0").Set(float64(count))
 	}
 
-	return []prometheus.Collector{
-		countGauge,
-		scoreHist,
-		ageHist,
-	}, nil
+	return collectors, nil
 }

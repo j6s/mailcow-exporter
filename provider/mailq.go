@@ -25,7 +25,7 @@ func (mailq Mailq) Provide(api mailcowApi.MailcowApiClient) ([]prometheus.Collec
 	body := make([]queueResponseItem, 0)
 	err := api.Get("api/v1/get/mailq/all", &body)
 	if err != nil {
-		return []prometheus.Collector{}, err
+		return []prometheus.Collector{gauge}, err
 	}
 
 	for _, item := range body {

@@ -18,6 +18,7 @@ type MailcowApiClient struct {
 	ApiKey       string
 	ResponseTime prometheus.GaugeVec
 	ResponseSize prometheus.GaugeVec
+	Success      prometheus.GaugeVec
 }
 
 func NewMailcowApiClient(host string, apiKey string) MailcowApiClient {
@@ -34,6 +35,11 @@ func NewMailcowApiClient(host string, apiKey string) MailcowApiClient {
 			Help:        "Size of API response in bytes",
 			ConstLabels: map[string]string{"host": host},
 		}, []string{"endpoint", "statusCode"}),
+		Success: *prometheus.NewGaugeVec(prometheus.GaugeOpts{
+			Name:        "mailcow_api_success",
+			Help:        "1, if request was sucessful, 0 if not",
+			ConstLabels: map[string]string{"host": host},
+		}, []string{"endpoint"}),
 	}
 }
 
@@ -46,6 +52,7 @@ func (api MailcowApiClient) Get(endpoint string, target interface{}) error {
 
 	request, err := http.NewRequest("GET", url, nil)
 	if err != nil {
+		api.Success.WithLabelValues(endpoint).Set(0.0)
 		return fmt.Errorf(
 			"Could not prepare API request to `%s`: %#v",
 			endpoint,
@@ -67,6 +74,7 @@ func (api MailcowApiClient) Get(endpoint string, target interface{}) error {
 
 	// API Request error handling
 	if err != nil {
+		api.Success.WithLabelValues(endpoint).Set(0.0)
 		return fmt.Errorf(
 			"API Request to endpoint `%s` failed: \n%s",
 			endpoint,
@@ -77,6 +85,7 @@ func (api MailcowApiClient) Get(endpoint string, target interface{}) error {
 	defer response.Body.Close()
 	body, err := ioutil.ReadAll(response.Body)
 	if err != nil {
+		api.Success.WithLabelValues(endpoint).Set(0.0)
 		return fmt.Errorf(
 			"Could not read API response body from endpoint `%s`: \n%s",
 			endpoint,
@@ -89,6 +98,7 @@ func (api MailcowApiClient) Get(endpoint string, target interface{}) error {
 		Set(float64(len(body)))
 
 	if response.StatusCode != 200 {
+		api.Success.WithLabelValues(endpoint).Set(0.0)
 		return fmt.Errorf(
 			"Received %d response from endpoint `%s`: \n\nResponse body received: \n%s",
 			response.StatusCode,
@@ -99,6 +109,7 @@ func (api MailcowApiClient) Get(endpoint string, target interface{}) error {
 
 	err = json.Unmarshal(body, target)
 	if err != nil {
+		api.Success.WithLabelValues(endpoint).Set(0.0)
 		return fmt.Errorf(
 			"Could not parse JSON response from endpoint `%s`: \n%s \n\nResponse body received: \n%s",
 			endpoint,
@@ -107,10 +118,11 @@ func (api MailcowApiClient) Get(endpoint string, target interface{}) error {
 		)
 	}
 
+	api.Success.WithLabelValues(endpoint).Set(1.0)
 	return nil
 }
 
 // Provides (meta) metrics about API endpoints
 func (api MailcowApiClient) Provide() []prometheus.Collector {
-	return []prometheus.Collector{api.ResponseSize, api.ResponseTime}
+	return []prometheus.Collector{api.ResponseSize, api.ResponseTime, api.Success}
 }

@@ -33,11 +33,12 @@ func (mailbox Mailbox) Provide(api mailcowApi.MailcowApiClient) ([]prometheus.Co
 	quotaAllowed := mailboxGauge("mailcow_mailbox_quota_allowed", "Quota maximum for the mailbox in bytes", api.Host)
 	quotaUsed := mailboxGauge("mailcow_mailbox_quota_used", "Current syze of the mailbox in bytes", api.Host)
 	messages := mailboxGauge("mailcow_mailbox_messages", "Number of messages in the mailbox", api.Host)
+	collectors := []prometheus.Collector{lastLogin, quotaAllowed, quotaUsed, messages}
 
 	body := make([]mailboxItem, 0)
 	err := api.Get("api/v1/get/mailbox/all", &body)
 	if err != nil {
-		return []prometheus.Collector{}, err
+		return collectors, err
 	}
 
 	for _, m := range body {
@@ -48,5 +49,5 @@ func (mailbox Mailbox) Provide(api mailcowApi.MailcowApiClient) ([]prometheus.Co
 		messages.WithLabelValues(m.Username).Set(float64(m.Messages))
 	}
 
-	return []prometheus.Collector{lastLogin, quotaAllowed, quotaUsed, messages}, nil
+	return collectors, nil
 }
