@@ -33,6 +33,7 @@ var (
 		provider.Mailbox{},
 		provider.Quarantine{},
 		provider.Container{},
+		provider.Rspamd{},
 	}
 )
 

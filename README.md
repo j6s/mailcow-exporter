@@ -174,4 +174,36 @@ mailcow_container_start{container="sogo-mailcow",host="mail.example.com",image="
 mailcow_container_start{container="solr-mailcow",host="mail.example.com",image="mailcow/solr:1.7"} 1.599247354e+09
 mailcow_container_start{container="unbound-mailcow",host="mail.example.com",image="mailcow/unbound:1.12"} 1.599247354e+09
 mailcow_container_start{container="watchdog-mailcow",host="mail.example.com",image="mailcow/watchdog:1.82"} 1.599247354e+09
+
+mailcow_rspamd_action{action="add header",host="mail.example.com"} 187
+mailcow_rspamd_action{action="greylist",host="mail.example.com"} 473
+mailcow_rspamd_action{action="no action",host="mail.example.com"} 10766
+mailcow_rspamd_action{action="reject",host="mail.example.com"} 701
+mailcow_rspamd_action{action="rewrite subject",host="mail.example.com"} 0
+mailcow_rspamd_action{action="soft reject",host="mail.example.com"} 0
+
+mailcow_rspamd_bytes_allocated{host="mail.example.com"} 2.9931856e+07
+
+mailcow_rspamd_chunks{host="mail.example.com",state="allocated"} 450
+mailcow_rspamd_chunks{host="mail.example.com",state="freed"} 0
+mailcow_rspamd_chunks{host="mail.example.com",state="oversized"} 3
+mailcow_rspamd_chunks{host="mail.example.com",state="shared"} 86
+
+mailcow_rspamd_classification{classification="ham",host="mail.example.com"} 11239
+mailcow_rspamd_classification{classification="spam",host="mail.example.com"} 888
+
+mailcow_rspamd_connections{host="mail.example.com"} 2
+mailcow_rspamd_control_connections{host="mail.example.com"} 4
+mailcow_rspamd_fragmented{host="mail.example.com"} 0
+
+mailcow_rspamd_fuzzy_hashes{action="local",host="mail.example.com"} 136
+mailcow_rspamd_fuzzy_hashes{action="mailcow",host="mail.example.com"} 177818
+mailcow_rspamd_fuzzy_hashes{action="rspamd.com",host="mail.example.com"} 1.333294152e+09
+
+mailcow_rspamd_learned{host="mail.example.com"} 1609
+
+mailcow_rspamd_pools{host="mail.example.com",state="allocated"} 1293
+mailcow_rspamd_pools{host="mail.example.com",state="freed"} 1250
+
+mailcow_rspamd_scanned{host="mail.example.com"} 12127
 ```
