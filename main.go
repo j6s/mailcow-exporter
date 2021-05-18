@@ -37,8 +37,8 @@ var (
 	}
 )
 
-func collectMetrics(host string, apiKey string) *prometheus.Registry {
-	apiClient := mailcowApi.NewMailcowApiClient(host, apiKey)
+func collectMetrics(scheme string, host string, apiKey string) *prometheus.Registry {
+	apiClient := mailcowApi.NewMailcowApiClient(scheme, host, apiKey)
 
 	success := prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Name:        "mailcow_exporter_success",
@@ -92,13 +92,17 @@ func main() {
 	http.HandleFunc("/metrics", func(response http.ResponseWriter, request *http.Request) {
 		host := request.URL.Query().Get("host")
 		apiKey := request.URL.Query().Get("apiKey")
+		scheme := request.URL.Query().Get("scheme")
 		if host == "" || apiKey == "" {
 			response.WriteHeader(http.StatusBadRequest)
 			response.Write([]byte("Query parameters `host` & `apiKey` are required"))
 			return
 		}
+		if scheme == "" {
+			scheme = "https"
+		}
 
-		registry := collectMetrics(host, apiKey)
+		registry := collectMetrics(scheme, host, apiKey)
 
 		promhttp.HandlerFor(
 			registry,

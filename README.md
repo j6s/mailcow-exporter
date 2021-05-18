@@ -38,6 +38,9 @@ scrape_configs:
       apiKey: [ 'YOUR-APIKEY-HERE' ]
 ```
 
+It also supports an optional `scheme` URL parameter, that defaults to `https`.
+Set it to `http` if you want to access API without TLS encryption.
+
 ## Example metrics
 
 ```
