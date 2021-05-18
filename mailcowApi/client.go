@@ -14,6 +14,7 @@ import (
 
 // Client for mailcow API
 type MailcowApiClient struct {
+	Scheme       string
 	Host         string
 	ApiKey       string
 	ResponseTime prometheus.GaugeVec
@@ -21,8 +22,9 @@ type MailcowApiClient struct {
 	Success      prometheus.GaugeVec
 }
 
-func NewMailcowApiClient(host string, apiKey string) MailcowApiClient {
+func NewMailcowApiClient(scheme string, host string, apiKey string) MailcowApiClient {
 	return MailcowApiClient{
+		Scheme: scheme,
 		Host:   host,
 		ApiKey: apiKey,
 		ResponseTime: *prometheus.NewGaugeVec(prometheus.GaugeOpts{
@@ -47,7 +49,7 @@ func NewMailcowApiClient(host string, apiKey string) MailcowApiClient {
 // with the correct authentication and unserialize the JSON
 // response into a given target reference.
 func (api MailcowApiClient) Get(endpoint string, target interface{}) error {
-	url := fmt.Sprintf("https://%s/%s", api.Host, endpoint)
+	url := fmt.Sprintf("%s://%s/%s", api.Scheme, api.Host, endpoint)
 	log.Print(url)
 
 	request, err := http.NewRequest("GET", url, nil)
