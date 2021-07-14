@@ -10,6 +10,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.1] - 2021-07-14
+### Fixed
+* A recent version of mailcow changed the type of a property from a string to an int. This
+  release adds support for newer mailcow versions returning an int while preserving functionality
+  on older mailcow versions that return a string.
+
 ## [1.3.0] - 2021-05-18
 ### Added
 * New `scheme` option to allow API requests via http. (Thank you [maximbaz](https://github.com/maximbaz))

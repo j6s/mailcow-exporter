@@ -1,7 +1,7 @@
 package provider
 
 import (
-	"strconv"
+	"encoding/json"
 
 	"github.com/j6s/mailcow-exporter/mailcowApi"
 	"github.com/prometheus/client_golang/prometheus"
@@ -12,11 +12,11 @@ import (
 type Mailbox struct{}
 
 type mailboxItem struct {
-	Username      string `json:"username"`
-	LastImapLogin string `json:"last_imap_login"`
-	Quota         int    `json:"quota"`
-	QuotaUsed     int    `json:"quota_used"`
-	Messages      int    `json:"messages"`
+	Username      string      `json:"username"`
+	LastImapLogin json.Number `json:"last_imap_login"`
+	Quota         json.Number `json:"quota"`
+	QuotaUsed     json.Number `json:"quota_used"`
+	Messages      json.Number `json:"messages"`
 }
 
 // All mailbox gauges have the same options anyways.
@@ -42,11 +42,30 @@ func (mailbox Mailbox) Provide(api mailcowApi.MailcowApiClient) ([]prometheus.Co
 	}
 
 	for _, m := range body {
-		lastLoginTimestamp, _ := strconv.ParseFloat(m.LastImapLogin, 64)
-		lastLogin.WithLabelValues(m.Username).Set(lastLoginTimestamp)
-		quotaAllowed.WithLabelValues(m.Username).Set(float64(m.Quota))
-		quotaUsed.WithLabelValues(m.Username).Set(float64(m.QuotaUsed))
-		messages.WithLabelValues(m.Username).Set(float64(m.Messages))
+		valueLastImapLogin, err := m.LastImapLogin.Float64()
+		if err != nil {
+			return collectors, err
+		}
+
+		valueQuota, err := m.Quota.Float64()
+		if err != nil {
+			return collectors, err
+		}
+
+		valueQuotaUsed, err := m.QuotaUsed.Float64()
+		if err != nil {
+			return collectors, err
+		}
+
+		valueMessages, err := m.Messages.Float64()
+		if err != nil {
+			return collectors, err
+		}
+
+		lastLogin.WithLabelValues(m.Username).Set(valueLastImapLogin)
+		quotaAllowed.WithLabelValues(m.Username).Set(valueQuota)
+		quotaUsed.WithLabelValues(m.Username).Set(valueQuotaUsed)
+		messages.WithLabelValues(m.Username).Set(valueMessages)
 	}
 
 	return collectors, nil
