@@ -34,6 +34,7 @@ var (
 		provider.Quarantine{},
 		provider.Container{},
 		provider.Rspamd{},
+		provider.Domain{},
 	}
 )
 
