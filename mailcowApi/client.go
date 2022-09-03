@@ -67,6 +67,14 @@ func (api MailcowApiClient) Get(endpoint string, target interface{}) error {
 
 	// API Request
 	response, err := (&http.Client{}).Do(request)
+	if err != nil {
+		api.Success.WithLabelValues(endpoint).Set(0.0)
+		return fmt.Errorf(
+			"could not execute API request to `%s`: %#v",
+			endpoint,
+			err.Error(),
+		)
+	}
 
 	// Metric collection about the API request
 	statusCodeString := strconv.FormatInt(int64(response.StatusCode), 10)
