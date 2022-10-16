@@ -134,12 +134,15 @@ func main() {
 			scheme = "https"
 		}
 
+		if host == "" {
 			response.WriteHeader(http.StatusBadRequest)
-			response.Write([]byte("Query parameters `host` & `apiKey` are required"))
+			response.Write([]byte("Query parameter `host` is required, since it is not defined by flags or environment"))
 			return
 		}
-		if scheme == "" {
-			scheme = "https"
+		if apiKey == "" {
+			response.WriteHeader(http.StatusUnauthorized)
+			response.Write([]byte("Query parameter `apiKey` is required, since it is not defined by flags or environment"))
+			return
 		}
 
 		registry := collectMetrics(scheme, host, apiKey)
