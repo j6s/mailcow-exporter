@@ -41,6 +41,17 @@ scrape_configs:
 It also supports an optional `scheme` URL parameter, that defaults to `https`.
 Set it to `http` if you want to access API without TLS encryption.
 
+### Setting host or api key on application start-up
+
+When using the exporter for a single mailcow host, it might be useful not to send `host` and `apiKey` with every request, since they don't change.
+Hence the API Key or Host can be set on application startup using flags or environment variables.
+
+The host can be set using the flag `host` or the environment variable `MCE_HOST`. If both items are set, the flag wins.
+
+The API Key can be set using the flag `apikey` or the environment variable `MCE_API_KEY`. If both items are set, the flag wins.
+
+**NOTE**: When using this, it might be a good idea to restrict access to the exporter via localhost (set `listen` flag to `127.0.0.1:9099` or `::1:9099`) or to restrict access to a local network, but not to bind the port on all interfaces.
+
 ## Example metrics
 
 ```
