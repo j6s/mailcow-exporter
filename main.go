@@ -17,6 +17,11 @@ var (
 	listen = flag.String("listen", ":9099", "Host and port to listen on")
 )
 
+var (
+	defaultHost   string
+	defaultApiKey string
+)
+
 // A Provider is the common abstraction over collection of metrics in this
 // exporter. It can provide one or more prometheus collectors (e.g. gauges,
 // histograms, ...) that are updated every time the `Update` method is called.
@@ -37,6 +42,14 @@ var (
 		provider.Domain{},
 	}
 )
+
+func parseFlagsAndEnv() {
+	flag.StringVar(&defaultHost, "host", "", "The host to connect to.")
+	flag.StringVar(&defaultApiKey, "apikey", "", "The API key to use for connection")
+
+	flag.Parse()
+
+}
 
 func collectMetrics(scheme string, host string, apiKey string) *prometheus.Registry {
 	apiClient := mailcowApi.NewMailcowApiClient(scheme, host, apiKey)
@@ -88,7 +101,7 @@ func collectMetrics(scheme string, host string, apiKey string) *prometheus.Regis
 }
 
 func main() {
-	flag.Parse()
+	parseFlagsAndEnv()
 
 	http.HandleFunc("/metrics", func(response http.ResponseWriter, request *http.Request) {
 		host := request.URL.Query().Get("host")
