@@ -107,7 +107,17 @@ func main() {
 		host := request.URL.Query().Get("host")
 		apiKey := request.URL.Query().Get("apiKey")
 		scheme := request.URL.Query().Get("scheme")
-		if host == "" || apiKey == "" {
+
+		if host == "" {
+			host = defaultHost
+		}
+		if apiKey == "" {
+			apiKey = defaultApiKey
+		}
+		if scheme == "" {
+			scheme = "https"
+		}
+
 			response.WriteHeader(http.StatusBadRequest)
 			response.Write([]byte("Query parameters `host` & `apiKey` are required"))
 			return
