@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/j6s/mailcow-exporter/mailcowApi"
 	"github.com/j6s/mailcow-exporter/provider"
@@ -43,12 +44,27 @@ var (
 	}
 )
 
+func setupParametersFromEnv() {
+	if defaultHost == "" {
+		if env_host, present := os.LookupEnv("MCE_HOST"); present {
+			defaultHost = env_host
+		}
+	}
+
+	if defaultApiKey == "" {
+		if env_api_key, present := os.LookupEnv("MCE_API_KEY"); present {
+			defaultApiKey = env_api_key
+		}
+	}
+}
+
 func parseFlagsAndEnv() {
 	flag.StringVar(&defaultHost, "host", "", "The host to connect to.")
 	flag.StringVar(&defaultApiKey, "apikey", "", "The API key to use for connection")
 
 	flag.Parse()
 
+	setupParametersFromEnv()
 }
 
 func collectMetrics(scheme string, host string, apiKey string) *prometheus.Registry {
