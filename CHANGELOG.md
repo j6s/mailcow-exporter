@@ -10,6 +10,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.0] - 2023-12-07
+### Added
+* Command line options `-defaultHost`, `-apikey`, `-listen` can now be set by environment variables
+  `MAILCOW_EXPORTER_HOST`, `MAILCOW_EXPORTER_API_KEY`, `MAILCOW_EXPORTER_LISTEN`
+
 ## [1.3.1] - 2021-07-14
 ### Fixed
 * A recent version of mailcow changed the type of a property from a string to an int. This
