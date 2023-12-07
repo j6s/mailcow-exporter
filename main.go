@@ -44,27 +44,14 @@ var (
 	}
 )
 
-func setupParametersFromEnv() {
-	if defaultHost == "" {
-		if env_host, present := os.LookupEnv("MAILCOW_EXPORTER_HOST"); present {
-			defaultHost = env_host
-		}
-	}
-
-	if defaultApiKey == "" {
-		if env_api_key, present := os.LookupEnv("MAILCOW_EXPORTER_API_KEY"); present {
-			defaultApiKey = env_api_key
-		}
-	}
-}
-
 func parseFlagsAndEnv() {
-	flag.StringVar(&defaultHost, "host", "", "The host to connect to.")
-	flag.StringVar(&defaultApiKey, "apikey", "", "The API key to use for connection")
+	envHost, _ := os.LookupEnv("MAILCOW_EXPORTER_HOST")
+	envApiKey, _ := os.LookupEnv("MAILCOW_EXPORTER_API_KEY")
+
+	flag.StringVar(&defaultHost, "defaultHost", envHost, "The defaultHost to connect to. Defaults to the MAILCOW_EXPORTER_HOST environment variable")
+	flag.StringVar(&defaultApiKey, "apikey", envApiKey, "The API key to use for connection. Defaults to the MAILCOW_EXPORTER_API_KEY environment variable")
 
 	flag.Parse()
-
-	setupParametersFromEnv()
 }
 
 func collectMetrics(scheme string, host string, apiKey string) *prometheus.Registry {
