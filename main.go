@@ -46,13 +46,13 @@ var (
 
 func setupParametersFromEnv() {
 	if defaultHost == "" {
-		if env_host, present := os.LookupEnv("MCE_HOST"); present {
+		if env_host, present := os.LookupEnv("MAILCOW_EXPORTER_HOST"); present {
 			defaultHost = env_host
 		}
 	}
 
 	if defaultApiKey == "" {
-		if env_api_key, present := os.LookupEnv("MCE_API_KEY"); present {
+		if env_api_key, present := os.LookupEnv("MAILCOW_EXPORTER_API_KEY"); present {
 			defaultApiKey = env_api_key
 		}
 	}
