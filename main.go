@@ -15,12 +15,9 @@ import (
 )
 
 var (
-	listen = flag.String("listen", ":9099", "Host and port to listen on")
-)
-
-var (
 	defaultHost   string
 	defaultApiKey string
+	listen        string
 )
 
 // A Provider is the common abstraction over collection of metrics in this
@@ -47,9 +44,14 @@ var (
 func parseFlagsAndEnv() {
 	envHost, _ := os.LookupEnv("MAILCOW_EXPORTER_HOST")
 	envApiKey, _ := os.LookupEnv("MAILCOW_EXPORTER_API_KEY")
+	defaultListen, _ := os.LookupEnv("MAILCOW_EXPORTER_LISTEN")
+	if defaultListen == "" {
+		defaultListen = ":9099"
+	}
 
 	flag.StringVar(&defaultHost, "defaultHost", envHost, "The defaultHost to connect to. Defaults to the MAILCOW_EXPORTER_HOST environment variable")
 	flag.StringVar(&defaultApiKey, "apikey", envApiKey, "The API key to use for connection. Defaults to the MAILCOW_EXPORTER_API_KEY environment variable")
+	flag.StringVar(&listen, "listen", defaultListen, "Host and port to listen on. Defaults to the MAILCOW_EXPORTER_LISTEN environment variable or ':9099' otherwise")
 
 	flag.Parse()
 }
@@ -140,6 +142,6 @@ func main() {
 		).ServeHTTP(response, request)
 	})
 
-	log.Printf("Starting to listen on %s", *listen)
-	log.Fatal(http.ListenAndServe(*listen, nil))
+	log.Printf("Starting to listen on %s", listen)
+	log.Fatal(http.ListenAndServe(listen, nil))
 }
