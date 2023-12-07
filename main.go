@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/j6s/mailcow-exporter/mailcowApi"
 	"github.com/j6s/mailcow-exporter/provider"
@@ -15,6 +16,11 @@ import (
 
 var (
 	listen = flag.String("listen", ":9099", "Host and port to listen on")
+)
+
+var (
+	defaultHost   string
+	defaultApiKey string
 )
 
 // A Provider is the common abstraction over collection of metrics in this
@@ -37,6 +43,29 @@ var (
 		provider.Domain{},
 	}
 )
+
+func setupParametersFromEnv() {
+	if defaultHost == "" {
+		if env_host, present := os.LookupEnv("MCE_HOST"); present {
+			defaultHost = env_host
+		}
+	}
+
+	if defaultApiKey == "" {
+		if env_api_key, present := os.LookupEnv("MCE_API_KEY"); present {
+			defaultApiKey = env_api_key
+		}
+	}
+}
+
+func parseFlagsAndEnv() {
+	flag.StringVar(&defaultHost, "host", "", "The host to connect to.")
+	flag.StringVar(&defaultApiKey, "apikey", "", "The API key to use for connection")
+
+	flag.Parse()
+
+	setupParametersFromEnv()
+}
 
 func collectMetrics(scheme string, host string, apiKey string) *prometheus.Registry {
 	apiClient := mailcowApi.NewMailcowApiClient(scheme, host, apiKey)
@@ -88,19 +117,32 @@ func collectMetrics(scheme string, host string, apiKey string) *prometheus.Regis
 }
 
 func main() {
-	flag.Parse()
+	parseFlagsAndEnv()
 
 	http.HandleFunc("/metrics", func(response http.ResponseWriter, request *http.Request) {
 		host := request.URL.Query().Get("host")
 		apiKey := request.URL.Query().Get("apiKey")
 		scheme := request.URL.Query().Get("scheme")
-		if host == "" || apiKey == "" {
-			response.WriteHeader(http.StatusBadRequest)
-			response.Write([]byte("Query parameters `host` & `apiKey` are required"))
-			return
+
+		if host == "" {
+			host = defaultHost
+		}
+		if apiKey == "" {
+			apiKey = defaultApiKey
 		}
 		if scheme == "" {
 			scheme = "https"
+		}
+
+		if host == "" {
+			response.WriteHeader(http.StatusBadRequest)
+			response.Write([]byte("Query parameter `host` is required, since it is not defined by flags or environment"))
+			return
+		}
+		if apiKey == "" {
+			response.WriteHeader(http.StatusUnauthorized)
+			response.Write([]byte("Query parameter `apiKey` is required, since it is not defined by flags or environment"))
+			return
 		}
 
 		registry := collectMetrics(scheme, host, apiKey)
