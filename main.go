@@ -51,7 +51,7 @@ func parseFlagsAndEnv() {
 	}
 
 
-	defaultScheme, _ := os.LookupEnv("MAILCOW_EXPORTER_LISTEN")
+	defaultScheme, _ := os.LookupEnv("MAILCOW_EXPORTER_SCHEME")
 	if defaultScheme == "" {
 		defaultScheme = "https"
 	}
