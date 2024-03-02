@@ -18,6 +18,7 @@ var (
 	defaultHost   string
 	defaultApiKey string
 	listen        string
+	scheme        string 
 )
 
 // A Provider is the common abstraction over collection of metrics in this
@@ -49,10 +50,17 @@ func parseFlagsAndEnv() {
 		defaultListen = ":9099"
 	}
 
+
+	defaultScheme, _ := os.LookupEnv("MAILCOW_EXPORTER_LISTEN")
+	if defaultScheme == "" {
+		defaultScheme = "https"
+	}
+
 	flag.StringVar(&defaultHost, "defaultHost", envHost, "The defaultHost to connect to. Defaults to the MAILCOW_EXPORTER_HOST environment variable")
 	flag.StringVar(&defaultApiKey, "apikey", envApiKey, "The API key to use for connection. Defaults to the MAILCOW_EXPORTER_API_KEY environment variable")
 	flag.StringVar(&listen, "listen", defaultListen, "Host and port to listen on. Defaults to the MAILCOW_EXPORTER_LISTEN environment variable or ':9099' otherwise")
-
+	flag.StringVar(&scheme, "scheme", defaultScheme, "Default connection scheme. Defaults to the MAILCOW_EXPORTER_SCHEME environment variable or 'https' otherwise")
+	
 	flag.Parse()
 }
 
@@ -120,7 +128,7 @@ func main() {
 			apiKey = defaultApiKey
 		}
 		if scheme == "" {
-			scheme = "https"
+			scheme = defaultScheme 
 		}
 
 		if host == "" {
