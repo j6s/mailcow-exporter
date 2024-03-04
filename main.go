@@ -19,6 +19,7 @@ var (
 	defaultApiKey string
 	listen        string
 	scheme        string 
+	defaultScheme string
 )
 
 // A Provider is the common abstraction over collection of metrics in this
@@ -51,10 +52,11 @@ func parseFlagsAndEnv() {
 	}
 
 
-	defaultScheme, _ := os.LookupEnv("MAILCOW_EXPORTER_SCHEME")
+	scheme, _ := os.LookupEnv("MAILCOW_EXPORTER_SCHEME")
 	if defaultScheme == "" {
 		defaultScheme = "https"
 	}
+	
 
 	flag.StringVar(&defaultHost, "defaultHost", envHost, "The defaultHost to connect to. Defaults to the MAILCOW_EXPORTER_HOST environment variable")
 	flag.StringVar(&defaultApiKey, "apikey", envApiKey, "The API key to use for connection. Defaults to the MAILCOW_EXPORTER_API_KEY environment variable")
@@ -62,6 +64,8 @@ func parseFlagsAndEnv() {
 	flag.StringVar(&scheme, "scheme", defaultScheme, "Default connection scheme. Defaults to the MAILCOW_EXPORTER_SCHEME environment variable or 'https' otherwise")
 	
 	flag.Parse()
+
+
 }
 
 func collectMetrics(scheme string, host string, apiKey string) *prometheus.Registry {
@@ -117,10 +121,11 @@ func main() {
 	parseFlagsAndEnv()
 
 	http.HandleFunc("/metrics", func(response http.ResponseWriter, request *http.Request) {
+		
 		host := request.URL.Query().Get("host")
 		apiKey := request.URL.Query().Get("apiKey")
 		scheme := request.URL.Query().Get("scheme")
-
+		
 		if host == "" {
 			host = defaultHost
 		}
@@ -141,6 +146,9 @@ func main() {
 			response.Write([]byte("Query parameter `apiKey` is required, since it is not defined by flags or environment"))
 			return
 		}
+
+
+
 
 		registry := collectMetrics(scheme, host, apiKey)
 
