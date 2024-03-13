@@ -126,6 +126,7 @@ func main() {
 
 		host := request.URL.Query().Get("host")
 		apiKey := request.URL.Query().Get("apiKey")
+		// why is the scheme formed from the request here? 
 		//scheme := request.URL.Query().Get("scheme")
 	
 		if host == "" {
