@@ -52,7 +52,7 @@ func parseFlagsAndEnv() {
 	}
 
 
-	scheme, _ := os.LookupEnv("MAILCOW_EXPORTER_SCHEME")
+	defaultScheme, _ := os.LookupEnv("MAILCOW_EXPORTER_SCHEME")
 	if defaultScheme == "" {
 		defaultScheme = "https"
 	}
@@ -118,14 +118,16 @@ func collectMetrics(scheme string, host string, apiKey string) *prometheus.Regis
 }
 
 func main() {
-	parseFlagsAndEnv()
 
+ parseFlagsAndEnv()
+	
 	http.HandleFunc("/metrics", func(response http.ResponseWriter, request *http.Request) {
-		
+	
+
 		host := request.URL.Query().Get("host")
 		apiKey := request.URL.Query().Get("apiKey")
-		scheme := request.URL.Query().Get("scheme")
-		
+		//scheme := request.URL.Query().Get("scheme")
+	
 		if host == "" {
 			host = defaultHost
 		}
@@ -139,8 +141,7 @@ func main() {
 		if host == "" {
 			response.WriteHeader(http.StatusBadRequest)
 			response.Write([]byte("Query parameter `host` is required, since it is not defined by flags or environment"))
-			return
-		}
+			return		}
 		if apiKey == "" {
 			response.WriteHeader(http.StatusUnauthorized)
 			response.Write([]byte("Query parameter `apiKey` is required, since it is not defined by flags or environment"))
